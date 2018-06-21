@@ -137,7 +137,7 @@ void hish_loop(void)
 	int status;
 
 	do {
-		printf("> ");
+		print_prompt();
 		line = hish_read_line();
 		args = hish_split_line(line);
 		status = hish_execute(args);
