@@ -74,6 +74,12 @@ char *hish_read_line(FILE *fpin)
 		} else if (c == '\n') {
 			buffer[position] = '\0';
 			return buffer;
+		} else if (c == '#') {
+			buffer[position] = '\0';
+			do {
+				c = getc(fpin);
+			} while (c != EOF && c != '\n');
+			return buffer;
 		} else {
 			buffer[position] = c;
 		} 
