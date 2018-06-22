@@ -58,7 +58,8 @@ static int hish_cd(char **args)
 static int hish_help(char **args)
 {
 	int i;
-	printf("Stephen Brennan's hish\n");
+
+	printf("HigeDice's Hish\n");
 	printf("Type Program names and arguments, and hit enter.\n");
 	printf("The following are built in:\n");
 
@@ -67,6 +68,11 @@ static int hish_help(char **args)
 	}
 
 	printf("Use the man command for information on other programs.\n");
+	printf("\n");
+	printf("HigeDice http://www.ohigedokoro.xyz/\n");
+	printf("         higedice@banjoyugi.net\n");
+	printf("https://github.com/higedice/hish\n");
+	printf("\n");
 
 	return 1;
 }
