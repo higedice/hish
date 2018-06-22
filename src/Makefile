@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -O2
+RM = rm -f
 
 all: hish
 
@@ -15,5 +16,6 @@ builtin_commands.o: builtin_commands.h builtin_commands.c
 prompt.o: prompt.h prompt.c
 	${CC} ${CFLAGS} -c -o prompt.o prompt.c
 
-clearn:
-	rm -f *.o
+.PHONY: clean
+clean:
+	${RM} *.o
