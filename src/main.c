@@ -54,7 +54,7 @@ int hish_execute(char **args)
 
 #define HISH_RL_BUFSIZE 1024
 
-char *hish_read_line(void)
+char *hish_read_line(FILE *fpin)
 {
 	int bufsize = HISH_RL_BUFSIZE;
 	int position = 0;
@@ -62,12 +62,12 @@ char *hish_read_line(void)
 	int c;
 
 	if (!buffer) {
-		fprintf(stderr, "hish: allocation error\n");
+		fprintf(stderr, "hish: allocation error.\n");
 		exit(EXIT_FAILURE);
 	}
 
 	while (1) {
-		c = getchar();
+		c = getc(fpin);
 
 		if (c == EOF) {
 			exit(EXIT_SUCCESS);
@@ -83,7 +83,7 @@ char *hish_read_line(void)
 			bufsize += HISH_RL_BUFSIZE;
 			buffer = realloc(buffer, bufsize);
 			if (!buffer) {
-				fprintf(stderr, "hish: allocation error\n");
+				fprintf(stderr, "hish: allocation error.\n");
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -130,15 +130,17 @@ char **hish_split_line(char *line)
 }
 
 
-void hish_loop(void)
+void hish_loop(FILE *fpin)
 {
 	char *line;
 	char **args;
 	int status;
 
 	do {
-		print_prompt();
-		line = hish_read_line();
+		if (fpin == stdin) {
+			print_prompt();
+		}
+		line = hish_read_line(fpin);
 		args = hish_split_line(line);
 		status = hish_execute(args);
 
@@ -150,10 +152,33 @@ void hish_loop(void)
 
 int main(int argc, char **argv)
 {
+	FILE *fp;
+
 	// load config files, if any.
 
-	// Run command loop.
-	hish_loop();
+
+	if (argc == 1) {
+		// Run command loop.
+		hish_loop(stdin);
+	} else if (argc > 2) {
+		fprintf(stderr, "hish: too match arguments.\n");
+	} else {
+		fp = fopen(argv[1], "r");
+		if (fp == NULL) {
+			fprintf(stderr, "hish: can't open %s.\n", argv[1]);
+			exit(EXIT_FAILURE);
+		} else {
+			// Run command loop.
+			hish_loop(fp);
+			fclose(fp);
+		}
+	}
+	if (ferror(stdout)) {
+		fprintf(stderr, "hish: error writing stdout.\n");
+		exit(EXIT_FAILURE);
+	}
+
+
 
 	// Perform any shutdown/cleanup.
 
