@@ -1,15 +1,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include "hish.h"
 #include "builtin_commands.h"
 
 static int hish_num_builtins(void);
 static int hish_cd(char **args);
+static int hish_source(char **args);
 static int hish_help(char **args);
 static int hish_exit(char **args);
 
 static char *builtin_str[] = {
 	"cd",
+	"source",
+	".",
 	"help",
 	"exit"
 };
@@ -17,6 +21,8 @@ static char *builtin_str[] = {
 
 static int (*builtin_func[]) (char **) = {
 	&hish_cd,
+	&hish_source,
+	&hish_source,
 	&hish_help,
 	&hish_exit
 };
@@ -53,6 +59,30 @@ static int hish_cd(char **args)
 
 	return 1;
 }
+
+
+static int hish_source(char **args)
+{
+	FILE *fp;
+
+	if (args[1] == NULL) {
+		fprintf(stderr, "hish: expected argument to \"%s\"\n", args[0]);
+	} else if (args[2] != NULL) {
+		fprintf(stderr, "hish: too many arguments to \"%s\"\n", args[0]);
+	} else {
+		fp = fopen(args[1], "r");
+		if (fp == NULL) {
+			fprintf(stderr, "hish: can't open %s.\n", args[1]);
+		} else {
+			// Run command loop.
+			hish_loop(fp);
+			fclose(fp);
+		}
+	}
+
+	return 1;
+}
+
 
 
 static int hish_help(char **args)

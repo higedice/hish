@@ -4,27 +4,25 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "hish.h"
 #include "builtin_commands.h"
 #include "prompt.h"
 
 
-static void hish_loop(FILE *fpin);
 static char **hish_split_line(char *line);
 static char *hish_read_line(FILE *fpin);
 static int hish_execute(char **args);
 static int hish_launch(char **args);
-
+static int load_config_files(void);
 
 
 int main(int argc, char **argv)
 {
 	FILE *fp;
 
-	// load config files, if any.
-
-
 	if (argc == 1) {
 		// Run command loop.
+		load_config_files();
 		hish_loop(stdin);
 	} else if (argc > 2) {
 		fprintf(stderr, "hish: too match arguments.\n");
@@ -53,7 +51,7 @@ int main(int argc, char **argv)
 
 
 
-static void hish_loop(FILE *fpin)
+void hish_loop(FILE *fpin)
 {
 	char *line;
 	char **args;
@@ -122,6 +120,7 @@ static char *hish_read_line(FILE *fpin)
 	int position = 0;
 	char *buffer = malloc(sizeof(char) * bufsize);
 	int c;
+	char str_exit[] = "exit";
 
 	if (!buffer) {
 		fprintf(stderr, "hish: allocation error.\n");
@@ -132,7 +131,17 @@ static char *hish_read_line(FILE *fpin)
 		c = getc(fpin);
 
 		if (c == EOF) {
-			exit(EXIT_SUCCESS);
+			if (position == 0) {
+				if (HISH_RL_BUFSIZE > strlen(str_exit) * sizeof(char)) {
+					strcpy(buffer, "exit");
+					return buffer;
+				} else {
+					exit(EXIT_SUCCESS);
+				}
+			} else {
+				buffer[position] = '\0';
+				return buffer;
+			}
 		} else if (c == '\n') {
 			buffer[position] = '\0';
 			return buffer;
@@ -157,8 +166,6 @@ static char *hish_read_line(FILE *fpin)
 		}
 	}
 }
-
-
 
 
 static int hish_execute(char **args)
@@ -203,6 +210,36 @@ static int hish_launch(char **args)
 	}
 
 	return 1;
+}
+
+
+static int load_config_files(void)
+{
+	char *homedir, *filename, *splitter, *fullpath;
+	FILE *fp;
+	char *source_args[2] = {"source", NULL};
+
+	homedir = getenv("HOME");
+	filename = ".hishrc";
+	splitter = "/";
+
+	fullpath = malloc(strlen(homedir) + strlen(splitter) + strlen(filename) + 1);
+	if (!fullpath) {
+		fprintf(stderr, "hish: allocation error.\n");
+		exit(EXIT_FAILURE);
+	}
+	fullpath[0] = '\0';
+	strcat(fullpath, homedir);
+	strcat(fullpath, splitter);
+	strcat(fullpath, filename);
+
+	source_args[1] = fullpath;
+
+	hish_execute(source_args);
+
+	free(fullpath);
+
+	return 0;
 }
 
 
