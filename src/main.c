@@ -133,7 +133,7 @@ static char *hish_read_line(FILE *fpin)
 		if (c == EOF) {
 			if (position == 0) {
 				if (HISH_RL_BUFSIZE > strlen(str_exit) * sizeof(char)) {
-					strcpy(buffer, "exit");
+					strcpy(buffer, str_exit);
 					return buffer;
 				} else {
 					exit(EXIT_SUCCESS);
