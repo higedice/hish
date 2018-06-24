@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 		load_config_files();
 		hish_loop(stdin);
 	} else if (argc > 2) {
-		fprintf(stderr, "hish: too match arguments.\n");
+		fprintf(stderr, "hish: too many arguments.\n");
 	} else {
 		fp = fopen(argv[1], "r");
 		if (fp == NULL) {
@@ -58,7 +58,7 @@ void hish_loop(FILE *fpin)
 	int status;
 
 	do {
-		if (fpin == stdin) {
+		if (isatty(fileno(fpin)) && isatty(fileno(stdout))) {
 			print_prompt();
 		}
 		line = hish_read_line(fpin);
