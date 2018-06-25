@@ -217,7 +217,7 @@ static int load_config_files(void)
 {
 	char *homedir, *filename, *splitter, *fullpath;
 	FILE *fp;
-	char *source_args[2] = {"source", NULL};
+	char *source_args[3] = {"source", NULL, NULL};
 
 	homedir = getenv("HOME");
 	filename = ".hishrc";
