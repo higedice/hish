@@ -14,6 +14,8 @@ static char *hish_read_line(FILE *fpin);
 static int hish_execute(char **args);
 static int hish_launch(char **args);
 static int load_config_files(void);
+static int is_interactive(FILE *fpin);
+static int fake_function_int_void(void);
 
 
 int main(int argc, char **argv)
@@ -21,8 +23,8 @@ int main(int argc, char **argv)
 	FILE *fp;
 
 	if (argc == 1) {
-		// Run command loop.
 		load_config_files();
+		// Run command loop.
 		hish_loop(stdin);
 	} else if (argc > 2) {
 		fprintf(stderr, "hish: too many arguments.\n");
@@ -56,11 +58,16 @@ void hish_loop(FILE *fpin)
 	char *line;
 	char **args;
 	int status;
+	int (*pp)(void);
+
+	if (is_interactive(fpin)) {
+		pp = &print_prompt;
+	} else {
+		pp = &fake_function_int_void;
+	}
 
 	do {
-		if (isatty(fileno(fpin)) && isatty(fileno(stdout))) {
-			print_prompt();
-		}
+		(*pp)();
 		line = hish_read_line(fpin);
 		args = hish_split_line(line);
 		status = hish_execute(args);
@@ -132,7 +139,10 @@ static char *hish_read_line(FILE *fpin)
 
 		if (c == EOF) {
 			if (position == 0) {
-				if (HISH_RL_BUFSIZE > sizeof str_exit * sizeof(char)) {
+				if (is_interactive(fpin)) {
+					puts(str_exit);
+				}
+				if (HISH_RL_BUFSIZE > sizeof str_exit * sizeof(char) + 1) {
 					strcpy(buffer, str_exit);
 					return buffer;
 				} else {
@@ -239,6 +249,23 @@ static int load_config_files(void)
 
 	free(fullpath);
 
+	return 0;
+}
+
+
+
+static int is_interactive(FILE *fpin)
+{
+	if (isatty(fileno(fpin)) && isatty(fileno(stdout))) {
+		return 1;
+	} else {
+		return 0;
+	}
+
+}
+
+
+static int fake_function_int_void(void) {
 	return 0;
 }
 
