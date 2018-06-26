@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include "hish.h"
 #include "builtin_commands.h"
@@ -49,8 +50,19 @@ static int hish_num_builtins()
 
 static int hish_cd(char **args)
 {
+	char *homedir;
+
 	if (args[1] == NULL) {
-		fprintf(stderr, "hish: expected argument to \"cd\"\n");
+		homedir = getenv("HOME");
+		if (homedir == NULL) {
+			fprintf(stderr, "hish: can't get your home directory.\n");
+		} else {
+			if (chdir(homedir) != 0) {
+				perror("hish");
+			}
+		}
+	} else if (args[2] != NULL) {
+		fprintf(stderr, "hish: too many arguments to \"cd\"\n");
 	} else {
 		if (chdir(args[1]) != 0) {
 			perror("hish");
