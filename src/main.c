@@ -230,24 +230,30 @@ static int load_config_files(void)
 	char *source_args[3] = {"source", NULL, NULL};
 
 	homedir = getenv("HOME");
-	filename = ".hishrc";
-	splitter = "/";
+	if (homedir == NULL) {
+		fprintf(stderr, "hish: can't get your home directory.\n");
+	} else {
+		filename = ".hishrc";
+		splitter = "/";
 
-	fullpath = malloc(strlen(homedir) + strlen(splitter) + strlen(filename) + 1);
-	if (!fullpath) {
-		fprintf(stderr, "hish: allocation error.\n");
-		exit(EXIT_FAILURE);
+		fullpath = malloc(
+			(strlen(homedir) + strlen(splitter) + strlen(filename) + 1)
+			* sizeof(char));
+		if (!fullpath) {
+			fprintf(stderr, "hish: allocation error.\n");
+			exit(EXIT_FAILURE);
+		}
+		fullpath[0] = '\0';
+		strcat(fullpath, homedir);
+		strcat(fullpath, splitter);
+		strcat(fullpath, filename);
+
+		source_args[1] = fullpath;
+	
+		hish_execute(source_args);
+
+		free(fullpath);
 	}
-	fullpath[0] = '\0';
-	strcat(fullpath, homedir);
-	strcat(fullpath, splitter);
-	strcat(fullpath, filename);
-
-	source_args[1] = fullpath;
-
-	hish_execute(source_args);
-
-	free(fullpath);
 
 	return 0;
 }
