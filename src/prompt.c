@@ -1,21 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include "prompt.h"
 
 #define HOSTNAME_BUFF_SIZE 512
+#define TIME_STR_BUFF_SIZE 256
 
 static char get_dollar_char();
 static char *get_host_name_string(char *hostname, char short_flag);
 static char *get_pwd_string(char short_flag);
-
+static char *get_time_str(char *timebuff, const char *format);
 
 
 int print_prompt()
 {
 	char *ps1, *p, *env;
 	char hostname[HOSTNAME_BUFF_SIZE];
+	char timebuff[TIME_STR_BUFF_SIZE];
 
 	//ps1 = getenv("PS1");
 	ps1 = "\\u@\\h \\$";
@@ -35,7 +38,7 @@ int print_prompt()
 				putchar('\a');
 				break;
 			case 'd':
-				putchar(*p);
+				printf("%s", get_time_str(timebuff, "%a %b %d"));
 				break;
 			case 'e':
 				putchar('\033');
@@ -56,13 +59,13 @@ int print_prompt()
 				printf("%s", "hish");
 				break;
 			case 't':
-				putchar(*p);
+				printf("%s", get_time_str(timebuff, "%H:%M:%S"));
 				break;
 			case 'T':
-				putchar(*p);
+				printf("%s", get_time_str(timebuff, "%I:%M:%S"));
 				break;
 			case '@':
-				putchar(*p);
+				printf("%s", get_time_str(timebuff, "%I:%M %p"));
 				break;
 			case 'u':
 				env = getenv("USER");
@@ -166,3 +169,17 @@ static char *get_pwd_string(char short_flag)
 
 	return pwd;
 }
+
+
+static char *get_time_str(char *timebuff, const char *format)
+{
+	time_t now;
+	struct tm *tp;
+
+	now = time(NULL);
+	tp = localtime(&now);
+	strftime(timebuff, TIME_STR_BUFF_SIZE - 1, format, tp);
+
+	return timebuff;
+}
+
