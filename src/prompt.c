@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <limits.h>
 #include "prompt.h"
 
 #define HOSTNAME_BUFF_SIZE 512
@@ -10,7 +11,7 @@
 
 static char get_dollar_char();
 static char *get_host_name_string(char *hostname, char short_flag);
-static char *get_pwd_string(char short_flag);
+static char *get_pwd_string(char *pwdbuff, char short_flag);
 static char *get_time_str(char *timebuff, const char *format);
 
 
@@ -19,9 +20,10 @@ int print_prompt()
 	char *ps1, *p, *env;
 	char hostname[HOSTNAME_BUFF_SIZE];
 	char timebuff[TIME_STR_BUFF_SIZE];
+	char pwdbuff[PATH_MAX];
 
 	//ps1 = getenv("PS1");
-	ps1 = "\\u@\\h \\$";
+	ps1 = "\\u@\\h \\W \\$";
 	p = ps1;
 
 	if (ps1 == NULL || ps1[0] == '\0') {
@@ -78,10 +80,10 @@ int print_prompt()
 				putchar(*p);
 				break;
 			case 'w':
-				printf("%s", get_pwd_string('w'));
+				printf("%s", get_pwd_string(pwdbuff, 'w'));
 				break;
 			case 'W':
-				printf("%s", get_pwd_string('W'));
+				printf("%s", get_pwd_string(pwdbuff, 'W'));
 				break;
 			case '!':
 				putchar(*p);
@@ -154,20 +156,43 @@ static char *get_host_name_string(char *hostname, char short_flag)
 }
 
 
-static char *get_pwd_string(char short_flag)
+static char *get_pwd_string(char *pwdbuff, char short_flag)
 {
-	char *pwd, *p;
+	char *p, *q, *homepath;
+	int i;
+	char rootchar = '/', homechar = '~';
 
-	pwd = getenv("PWD");
+	getcwd(pwdbuff, PATH_MAX);
+	p = pwdbuff;
+
+	if (pwdbuff == NULL) {
+		pwdbuff[0] = '\0';
+		return pwdbuff;
+	}
+
+	homepath = getenv("HOME");
+
+	if (homepath == NULL) {
+		homepath[0] = '\0';
+	}
+
+	for (i = 0; homepath[i] == pwdbuff[i] && homepath[i] != '\0'; i++) {
+	}
+	i--;
+
+	if (i > 1 && i == strlen(homepath) - 1) {    // HOME Path to "~"
+		pwdbuff[i] = homechar;
+		p = &pwdbuff[i];
+	}
 
 	if (short_flag == 'W') {
-		p = strrchr(pwd, '/');
-		if (p != NULL) {
-			return ++p;
+		q = strrchr(p, rootchar);
+		if (q != NULL && !(q[0] == rootchar && q[1] == '\0')) { // "/" is "/"
+			return ++q;
 		}
 	}
 
-	return pwd;
+	return p;
 }
 
 
